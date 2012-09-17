@@ -1,0 +1,62 @@
+package jp.co.worksap.recruiting;
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.NoSuchElementException;
+
+public class ExamImmutableQueueImpl<E> implements ExamImmutableQueue<E> {
+
+    int qLength;
+	Object[] qArray;
+	
+	public static final int MAXSIZE = 1024;
+
+    public ExamImmutableQueueImpl() {
+	    qLength = 0;
+		qArray = new Object[MAXSIZE];
+    }
+
+    public ExamImmutableQueueImpl(List<E> queue) {
+	    qArray = queue.toArray(new Object[0]);
+		qLength = queue.size();
+    }
+	
+	public ExamImmutableQueueImpl(Object[] array) {
+		qArray = array;
+		qLength = array.length;
+	}
+
+    public ExamImmutableQueue<E> enqueue(E e) {
+		if(e==null)
+			throw new IllegalArgumentException();
+		
+		Object[] tArray = null;
+		if(qArray.length==qLength) {
+		    tArray = new Object[qLength*2];
+			System.arraycopy(qArray,0,tArray,0,qLength);
+		}
+		
+		tArray[qLength] = e;
+		
+		return new ExamImmutableQueueImpl<E>(tArray);
+    }
+
+    public ExamImmutableQueue<E> dequeue() {
+		if(qLength==0) return null;
+		
+		Object[] tArray = new Object[qLength];
+		System.arraycopy(qArray,1,tArray,0,qLength-1);
+		
+		return new ExamImmutableQueueImpl<E>(tArray);
+    }
+
+    public E peek() {
+		if(qLength==0) return null;
+		
+		return (E)qArray[0];
+    }
+    
+    public int size() {
+		return qLength;
+    }
+}
