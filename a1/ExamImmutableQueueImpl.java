@@ -1,7 +1,6 @@
 package jp.co.worksap.recruiting;
 
 import java.util.List;
-import java.util.ArrayList;
 import java.util.NoSuchElementException;
 
 public class ExamImmutableQueueImpl<E> implements ExamImmutableQueue<E> {
@@ -42,7 +41,8 @@ public class ExamImmutableQueueImpl<E> implements ExamImmutableQueue<E> {
     }
 
     public ExamImmutableQueue<E> dequeue() {
-		if(qLength==0) return null;
+		if(qLength==0) 
+		    throw new NoSuchElementException();
 		
 		Object[] tArray = new Object[qLength];
 		System.arraycopy(qArray,1,tArray,0,qLength-1);
