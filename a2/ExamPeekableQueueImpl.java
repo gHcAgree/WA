@@ -1,24 +1,20 @@
 package jp.co.worksap.recruiting;
 
-import java.util.Stack;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.NoSuchElementException;
 
 public class ExamPeekableQueueImpl<E extends Comparable<E>> implements ExamPeekableQueue<E> {
 
-    MyList<E> queue;
-    Stack<E> maxStk;
-    Stack<E> minStk;
-    Stack<E> medianStk;
+    //ArrayDeque, a linear collection that supports element insertion and removal at both ends
+    ArrayDeque<E> queue;
+    ArrayDeque<E> maxQue;
+    ArrayDeque<E> minQue;
 
     public ExamPeekableQueueImpl() {
-	queue = new MyList<E>();
-	maxStk = new Stack<E>();
-	minStk = new Stack<E>();
-	medianStk = new Stack<E>();
-    }
-
-    public ExamPeekableQueueImpl(MyList<E> queue) {
-	this.queue = queue;
+	queue = new ArrayDeque<E>();
+	maxQue = new ArrayDeque<E>();
+	minQue = new ArrayDeque<E>();
     }
 
     public void enqueue(E e) {
@@ -26,42 +22,34 @@ public class ExamPeekableQueueImpl<E extends Comparable<E>> implements ExamPeeka
 	    throw new IllegalArgumentException();
 	queue.add(e);
 
-	if(!maxStk.empty()) {
-	    E max = maxStk.peek();
-	    if(max.compareTo(e)<0)
-	        maxStk.push(e);
+	if(maxQue.isEmpty())
+	    maxQue.add(e);
+	else {
+	    //if there are elements "smaller" than e at the tail, remove them all
+	    //and then add e to the tail;
+	    //else just add e to the tail;
+	    //this is to ensure that the maxQue is ordered "descendingly" with
+	    //the maximum element at the head
+	    System.out.println("-----");
+	    while(!maxQue.isEmpty() && maxQue.peekLast().compareTo(e)<0)
+	        System.out.println(e+": "+maxQue.removeLast());
+	    maxQue.add(e);
 	}
-	else maxStk.push(e);
 
-	if(!minStk.empty()) {
-	    E min = minStk.peek();
-	    if(min.compareTo(e)>0)
-	        minStk.push(e);
-	}
-	else minStk.push(e);
+        System.out.println("Peek: "+maxQue.peek());
 
-	if(!medianStk.empty()) {
-	    E median = medianStk.peek();
-	    //if the enqueued element is largger, the median may be larger
-	    if(median.compareTo(e)>=0) {
-		//if there are even number of elements in the queue after enqueue,
-		//we select the larger one
-		if(queue.size()%2==0) {
-		    medianStk.pop();
-		    medianStk.push(e);
-		}
-	    }
-	    //if the enqueued element is smaller, the median may be smaller
-	    if(median.compareTo(e)<0) {
-		//if there are odd number of elements in the queue after enqueue,
-		//we select the smaller one
-		if(queue.size()%2==1) {
-		    medianStk.pop();
-		    medianStk.push(e);
-		}
-	    }
+	if(minQue.isEmpty())
+	    minQue.add(e);
+	else {
+	    //if there are elements "larger" than e at the tail, remove them all
+	    //and then add e to the tail;
+	    //else just add e to the tail;
+	    //this is to ensure that the minQue is ordered "ascendingly" with
+	    //the minimum element at the head
+	    while(!minQue.isEmpty() && minQue.peekLast().compareTo(e)>0)
+		minQue.removeLast();
+	    minQue.add(e);
 	}
-	else medianStk.push(e);
     }
 
     public E dequeue() {
@@ -69,130 +57,77 @@ public class ExamPeekableQueueImpl<E extends Comparable<E>> implements ExamPeeka
 	    throw new NoSuchElementException();
 
 	E e = queue.remove();
-	E max = maxStk.peek();
-	E min = minStk.peek();
-	E median = medianStk.peek();
 
-	if(max.equals(e))
-	    maxStk.pop();
-	if(min.equals(e))
-	    minStk.pop();
-        if(median.equals(e))
-	    medianStk.pop();
+	//if the current maximum/minimum at the head of the maxQue/minQue is removed
+	//the second largest/smallest element(right after the maximum/minimum)
+	// in the maxQue/minQue will take the place
+	if(!maxQue.isEmpty() && maxQue.peek().equals(e))
+	    maxQue.remove();
+	if(!minQue.isEmpty() && minQue.peek().equals(e))
+	    minQue.remove();
+        System.out.println("Peek: "+maxQue.peek());
 	return e;
     }
 
     public E peekMedian() {
-	if(!medianStk.empty())
-	    return medianStk.peek();
-	else
+	if(queue.isEmpty())
 	    throw new NoSuchElementException();
+	//find the (size()/2+1)th smallest element
+	//convert the ArrayDeque to Array to facilitate the following operations
+	Object[] array = queue.toArray();
+	return selectKth(array, 0, array.length-1, array.length/2+1);
     }
 
     public E peekMaximum() {
-	if(!maxStk.empty())
-	    return maxStk.peek();
-	else
+	if(maxQue.isEmpty())
 	    throw new NoSuchElementException();
+	return maxQue.peek();
     }
 
     public E peekMinimum() {
-	if(!minStk.empty())
-	    return minStk.peek();
-	else
+	if(minQue.isEmpty())
 	    throw new NoSuchElementException();
+	return minQue.peek();
     }
 
     public int size() {
         return queue.size();
     }
-}
 
-
-class Node<E> {
-    public E datum;
-    public Node<E> next;
-
-    public Node(E d) {
-	datum = d;
-	next = null;
-    }
-
-    public void setDatum(E d) {
-	datum = d;
-    }
-
-    public E getDatum() {
-	return datum;
-    }
-
-    public void setNext(Node<E> n) {
-	next = n;
-    }
-
-    public Node<E> getNext() {
-	return next;
-    }
-}
-
-class MyList<E> {
-    public Node<E> head;
-    public Node<E> tail;
-    public int size;
-
-    public MyList() {
-	head = null;
-	tail = null;
-	size = 0;
-    }
-
-    public MyList(MyList<E> list) {
-	if(list==null||list.head==null)
-	   throw new IllegalArgumentException();
-	Node<E> tmp1;
-	for(tmp1=list.head;tmp1!=null;tmp1=tmp1.next)
-	    this.add(tmp1.datum);
-    }
-
-    public void add(E e) {
-	if(head==null) {
-	    head = new Node<E>(e);
-	    tail = head;
-	}
-	else {
-	    Node<E> tmp = new Node<E>(e);
-	    tail.next = tmp;
-	    tail = tmp;
-	}
-
-	size++;
-    }
-
-    public E remove() {
-	if(head==null)
+    ////////////////////////////////////
+    // addtional methods
+    ////////////////////////////////////
+    
+    public E selectKth(Object[] array,int left,int right,int k) {
+	if(k>right+1)
 	    throw new NoSuchElementException();
 
-	if(head==tail) {
-	    E e = head.datum;
-	    head = null;
-	    tail = head;
-	    return e;
+	if(left==right)
+	    return (E)array[left];
+
+	int partIndex = partition(array,left,right);
+	if(partIndex+1==k) 
+	    return (E)array[partIndex];
+	else if(partIndex+1>k) 
+	    return selectKth(array, left, partIndex-1, k);
+	else
+            return selectKth(array, partIndex+1, right, k-partIndex-1);
+    }
+
+    public int partition(Object[] array,int left,int right) {
+	E pivot = (E)array[left];
+	while(left<right) {
+	    while(left<right && ((E)array[right]).compareTo(pivot)>=0) 
+		right--;
+	    array[left] = array[right];
+	    while(left<right && ((E)array[left]).compareTo(pivot)<=0)
+		left++;
+	    array[right] = array[left];    
 	}
+	array[left] = pivot;
 
-        size--;
-
-	Node<E> tmp = head;
-	head = head.next;
-	tmp.next = null;
-	return tmp.datum;
-    }
-
-    public boolean isEmpty() {
-	return size==0;
-    }
-
-    public int size() {
-	return size;
+	return left;
     }
 }
+
 
