@@ -30,13 +30,10 @@ public class ExamPeekableQueueImpl<E extends Comparable<E>> implements ExamPeeka
 	    //else just add e to the tail;
 	    //this is to ensure that the maxQue is ordered "descendingly" with
 	    //the maximum element at the head
-	    System.out.println("-----");
 	    while(!maxQue.isEmpty() && maxQue.peekLast().compareTo(e)<0)
-	        System.out.println(e+": "+maxQue.removeLast());
+	        maxQue.removeLast();
 	    maxQue.add(e);
 	}
-
-        System.out.println("Peek: "+maxQue.peek());
 
 	if(minQue.isEmpty())
 	    minQue.add(e);
@@ -65,7 +62,6 @@ public class ExamPeekableQueueImpl<E extends Comparable<E>> implements ExamPeeka
 	    maxQue.remove();
 	if(!minQue.isEmpty() && minQue.peek().equals(e))
 	    minQue.remove();
-        System.out.println("Peek: "+maxQue.peek());
 	return e;
     }
 
@@ -99,10 +95,10 @@ public class ExamPeekableQueueImpl<E extends Comparable<E>> implements ExamPeeka
     ////////////////////////////////////
     
     public E selectKth(Object[] array,int left,int right,int k) {
-	if(k>right+1)
+	if(k>right+1||k<=0)
 	    throw new NoSuchElementException();
 
-	if(left==right)
+	if(left>=right)
 	    return (E)array[left];
 
 	int partIndex = partition(array,left,right);
